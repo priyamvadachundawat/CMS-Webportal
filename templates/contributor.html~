@@ -1,0 +1,40 @@
+
+<!DOCTYPE html>
+<html>
+<body>
+<h1>Welcome to the Uploading page {{upload.conributor.user.username}}</h1>
+
+
+
+{% for i in uploads %}
+	{{i.name}}
+	
+	<h2>{{i.topic}}</h2><a href="/media/{{i.pdf}}">FILE</a>
+	<h3>{{i.summary}}</h3>
+	
+	{{i.id}}
+		<a href="/media/{{i.video}}"> Video </a>
+		<h3>{{i.summary}}</h3>
+	
+	{{i.rating}}<br>
+	{{i.approve}}	<br><br><br>
+	<hr>	
+{% endfor %}
+
+<p> For more uploads </p>
+
+<a href= "cprofile/Uploads">Upload more </a><br><br>
+
+<a href="http://127.0.0.1:8000/upload">
+<button id='Upload' type='submit'><span>Upload</span></button></a>
+				  
+
+<a href="/logout">
+<button id='Logout-button' type='submit' ><span>Log out</span></button></a><br><br>
+
+
+<a href="/user/password/change">
+<button id='Password-reset-button' type='submit' ><span>Change Password</span></button></a>
+
+</body>
+</html>

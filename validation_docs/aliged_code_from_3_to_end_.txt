@@ -1,0 +1,1177 @@
+public void onBackPressed() {
+
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		builder.setMessage("Are you sure you want to exit?")
+				.setCancelable(false)
+				.setPositiveButton("Yes",
+						new DialogInterface.OnClickListener() {
+							public void onClick(DialogInterface dialog, int id) {
+								finish();
+								android.os.Process
+										.killProcess(android.os.Process.myPid());
+							}
+						})
+				.setNegativeButton("No", new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int id) {
+						dialog.cancel();
+					}
+				});
+		AlertDialog alert = builder.create();
+		alert.show();
+	}
+
+--------------------------------------------------------------------------------------------------------------------------
+
+        import android.app.ActivityGroup;
+	import android.app.AlertDialog;
+	import android.os.Bundle;
+	import android.os.Environment;
+	import android.util.Log;
+	import android.view.Menu;
+	import android.view.MenuInflater;
+	import android.view.MenuItem;
+	import android.webkit.WebChromeClient;
+	import android.webkit.WebSettings;
+	import android.webkit.WebView;
+	import com.aakash.lab.R;
+	import android.webkit.JsResult;
+	import java.io.*;	
+	import android.app.AlertDialog.Builder;
+	import android.app.Dialog;
+	import android.content.DialogInterface;
+
+-------------------------------------------------------------------------------------------------------------------------
+
+	        // web view for c class
+		WebView engine = (WebView) findViewById(R.id.webView1);
+		WebSettings webSettings = engine.getSettings();
+		// java script enabled
+		webSettings.setJavaScriptEnabled(true);
+		// js interface for reload
+		engine.addJavascriptInterface(new JsInterface(), "android");
+		// cache problem removed
+		webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE);
+		webSettings.setAppCacheEnabled(false);
+		// scroll bars disabled
+		engine.setVerticalScrollBarEnabled(false);
+		engine.setHorizontalScrollBarEnabled(false);
+		// focused the web page
+		engine.setOnTouchListener(new View.OnTouchListener() {
+			public boolean onTouch(View v, MotionEvent event) {
+				switch (event.getAction()) {
+				case MotionEvent.ACTION_DOWN:
+				case MotionEvent.ACTION_UP:
+					if (!v.hasFocus()) {
+						v.requestFocus();
+					}
+					break;
+				}
+				return false;
+			}
+
+			public boolean onTouch1(View arg0, MotionEvent arg1) {
+				// TODO Auto-generated method stub
+				return false;
+			}
+		});
+
+		engine.loadUrl("http://127.0.0.1/html/c/index.html");
+
+		engine.setWebChromeClient(new WebChromeClient()
+
+		{
+			@Override
+			public void onConsoleMessage(String message, int lineNumber,
+					String sourceID) {
+				Log.d("MyApplication", message + " -- From line " + lineNumber
+						+ " of " + sourceID);
+				super.onConsoleMessage(message, lineNumber, sourceID);
+			}
+
+		});
+
+
+------------------------------------------------------------------------------------------------------------------------
+
+public boolean onCreateOptionsMenu(Menu menu) {
+		MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.menu1, menu);
+		return true;
+	}
+
+	public boolean onOptionsItemSelected(MenuItem item) {
+		// Handle item selection
+
+		switch (item.getItemId()) {
+		case R.id.savecode1:
+			save();
+			return true;
+		case R.id.open:
+			oe_path = Environment.getExternalStorageDirectory() + "/APL/c/code/";
+			mPath = new File(oe_path);
+			loadFileList();
+			return true;
+		case R.id.example:
+			oe_path = "/data/local/linux/var/www/html/c/example/";
+			mPath = new File(oe_path);
+			loadFileList();
+			return true;
+		case R.id.help:
+			Intent myIntent = new Intent(c.this, help.class);
+			startActivityForResult(myIntent, 0);
+			return true;
+		case R.id.about:
+			Intent myIntent1 = new Intent(c.this, about.class);
+			startActivityForResult(myIntent1, 0);
+			return true;
+		default:
+			return super.onOptionsItemSelected(item);
+		}
+	}
+
+------------------------------------------------------------------------------------------------------------------------
+
+public void save()
+    {
+    	  // TODO Auto-generated method stub
+	    	 WebView engine = (WebView) findViewById(R.id.webView1); 
+	    	 WebSettings webSettings = engine.getSettings();
+	         webSettings.setJavaScriptEnabled(true);
+	         engine.getSettings().setJavaScriptEnabled(true);
+	         webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE);
+	  	 webSettings.setAppCacheEnabled(false);
+	         engine.setWebChromeClient(new MyWebChromeClientsci());
+	         engine.loadUrl("javascript:savecode()");      	
+}
+
+----------------------------------------------------------------------------------------------------------------------
+
+private void loadFileList() {
+		try {
+			mPath.mkdirs();
+		} catch (SecurityException e) {
+			System.out.println("unable to write on the sd card ");
+		}
+		if (mPath.exists()) {
+			FilenameFilter filter = new FilenameFilter() {
+				public boolean accept(File dir, String filename) {
+					File sel = new File(dir, filename);
+					return filename.contains(FTYPE) || sel.isDirectory();
+				}
+			};
+			mFileList = mPath.list(filter);
+
+			onCreateDialog(DIALOG_LOAD_FILE);
+
+		} else {
+			mFileList = new String[0];
+		}
+	}
+
+	protected Dialog onCreateDialog(int id) {
+
+		Dialog dialog = null;
+		AlertDialog.Builder builder = new Builder(this);
+
+		switch (id) {
+		case DIALOG_LOAD_FILE:
+
+			builder.setTitle("Choose your file");
+			if (mFileList == null) {
+				System.out.println("Showing file picker before loading the file list ");
+				dialog = builder.create();
+				return dialog;
+			}
+			builder.setItems(mFileList, new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int which) {
+					mChosenFile = mFileList[which];
+
+					InputStream inStream = null;
+					OutputStream outStream = null;
+
+					try {
+						File bfile = new File(
+								"/data/local/linux/var/www/html/scilab/code/.open_file.cde");
+
+						inStream = new FileInputStream(oe_path + mChosenFile);
+						outStream = new FileOutputStream(bfile);
+						byte[] buffer = new byte[1024];
+						int length;
+						while ((length = inStream.read(buffer)) > 0) {
+							outStream.write(buffer, 0, length);
+						}
+
+						inStream.close();
+						outStream.close();
+						openFile();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+			});
+			break;
+		}
+		dialog = builder.show();
+		return dialog;
+	}
+
+
+
+------------------------------------------------------------------------------------------------------------------------
+
+public void savefig() {
+		// TODO Auto-generated method stub
+
+		WebView engine = (WebView) findViewById(R.id.webView1);
+
+		WebSettings webSettings = engine.getSettings();
+
+		webSettings.setJavaScriptEnabled(true);
+
+		engine.getSettings().setJavaScriptEnabled(true);
+
+		webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE);
+
+		webSettings.setAppCacheEnabled(false);
+
+		engine.setWebChromeClient(new MyWebChromeClientsci());
+
+		engine.loadUrl("javascript:saveImg()");
+	}
+
+
+-------------------------------------------------------------------------------------------------------------------------
+
+ //button for close
+    Button btnOpenNewActivity = (Button) findViewById(R.id.button1);
+    btnOpenNewActivity .setOnClickListener(new View.OnClickListener() {
+    	// close this class and bring to same state
+        public void onClick(View v) {        	
+            finish();
+        }
+    }); 	        
+// webview for help     
+WebView engine = (WebView) findViewById(R.id.webView1);       
+WebSettings webSettings = engine.getSettings();
+//java script enabled
+webSettings.setJavaScriptEnabled(true);
+// cache problem removed
+webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE);
+webSettings.setAppCacheEnabled(false);
+ //scroll bars disabled in webview
+engine.setVerticalScrollBarEnabled(false);
+engine.setHorizontalScrollBarEnabled(false);
+ // focus on web page
+engine.setOnTouchListener(new View.OnTouchListener() { 	        
+	public boolean onTouch(View v, MotionEvent event) {
+	           switch (event.getAction()) { 
+	               case MotionEvent.ACTION_DOWN: 
+	               case MotionEvent.ACTION_UP: 
+	                   if (!v.hasFocus()) { 
+	                       v.requestFocus(); 
+	                   } 
+	                   break;      	           } 
+	           return false; 
+	        }
+public boolean onTouch1(View arg0, MotionEvent arg1) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+	});	       
+// address of html file in ch root
+engine.loadUrl("http://127.0.0.1/html/help.html"); 
+// enabling all pop ups in web view
+engine.setWebChromeClient(new WebChromeClient()
+{
+  @Override
+  public void onConsoleMessage(String message, int lineNumber,String sourceID) {
+      Log.d("MyApplication", message + " -- From line "+ lineNumber + " of " + sourceID);
+      super.onConsoleMessage(message, lineNumber, sourceID);
+  }
+});		        }    
+
+-------------------------------------------------------------------------------------------------------------------------
+
+ //button for close
+    Button btnOpenNewActivity = (Button) findViewById(R.id.button1);
+    btnOpenNewActivity .setOnClickListener(new View.OnClickListener() {
+    	// close this class and bring to same state
+        public void onClick(View v) {           	
+            finish();		        }
+    });         
+// webview for help     
+WebView engine = (WebView) findViewById(R.id.webView1);       
+WebSettings webSettings = engine.getSettings();
+//java script enabled
+webSettings.setJavaScriptEnabled(true);
+// cache problem removed
+webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE);
+ webSettings.setAppCacheEnabled(false);
+ //scroll bars disabled in webview
+engine.setVerticalScrollBarEnabled(false);
+	 engine.setHorizontalScrollBarEnabled(false);
+ // focus on web page
+engine.setOnTouchListener(new View.OnTouchListener() { 	        
+	public boolean onTouch(View v, MotionEvent event) {
+	           switch (event.getAction()) { 
+	               case MotionEvent.ACTION_DOWN: 
+	               case MotionEvent.ACTION_UP: 
+	                   if (!v.hasFocus()) { 
+	                       v.requestFocus(); 
+	                   } 
+	                   break;       	           } 
+	           return false; 
+	        }
+
+public boolean onTouch1(View arg0, MotionEvent arg1) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+	});	       
+// address of html file in ch root
+engine.loadUrl("http://127.0.0.1/html/help.html"); 
+// enabling all pop ups in web view
+engine.setWebChromeClient(new WebChromeClient()
+{          @Override
+  public void onConsoleMessage(String message, int lineNumber,String sourceID) {
+      Log.d("MyApplication", message + " -- From line "+ lineNumber + " of " + sourceID);
+      super.onConsoleMessage(message, lineNumber, sourceID);
+  }
+});		        }    
+
+------------------------------------------------------------------------------------------------------------------------
+
+
+    <uses-sdk android:minSdkVersion="8" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
+-------------------------------------------------------------------------------------------------------------------------
+
+<application
+        android:icon="@drawable/apl"
+        android:label="@string/app_name9" 
+        android:background="@null"
+        >
+
+------------------------------------------------------------------------------------------------------------------------
+
+
+       <activity
+            android:name=".APLActivity"
+            android:configChanges="keyboardHidden|orientation"
+            android:label="@string/app_name" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name="com.aakash.lab.sci"
+            android:label="@string/app_name1" >
+        </activity>
+        <activity
+            android:name="com.aakash.lab.c"
+            android:label="@string/app_name2" >
+        </activity>
+        <activity
+            android:name="com.aakash.lab.cp"
+            android:label="@string/app_name3" >
+        </activity>
+        <activity
+            android:name="com.aakash.lab.py"
+            android:label="@string/app_name4" >
+        </activity>        
+        <activity
+            android:name=".OnlyExt"
+            android:label="@string/app_name4" >
+        </activity>
+        <activity
+            android:name=".chelp"
+            android:label="@string/app_name7" >
+        </activity>
+        <activity
+            android:name=".cphelp"
+            android:label="@string/app_name7" >
+        </activity>
+        <activity
+            android:name=".pyhelp"
+            android:label="@string/app_name7" >
+        </activity>
+        <activity
+            android:name=".scihelp"
+            android:label="@string/app_name7" >
+        </activity>
+        <activity
+            android:name="com.aakash.lab.about"
+            android:label="@string/app_name8" >
+        </activity>
+------------------------------------------------------------------------------------------------------------------------
+
+<WebView android:id="@+id/webView1"
+             android:layout_width="fill_parent"
+             android:layout_height="fill_parent"
+              />
+
+----------------------------------------------------------------------------------------------------------------------
+
+
+   <Button
+        android:id="@+id/button1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Close" />
+
+   <ImageView
+        android:id="@+id/imageView1"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"/>
+
+------------------------------------------------------------------------------------------------------------------------
+
+    <Button
+        android:id="@+id/button1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Close" />
+
+    <WebView
+        android:id="@+id/webView1"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+-------------------------------------------------------------------------------------------------------------------------
+
+import com.aakash.lab.R;
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.os.Bundle;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.ImageButton;
+import android.widget.TextView;
+
+
+-----------------------------------------------------------------------------------------------------------------
+
+
+ImageButton rd1, rd2, rd4, rd5; 
+	TextView tv1,tv2; 
+	@Override 
+	public void onCreate(Bundle savedInstanceState) {
+	super.onCreate(savedInstanceState);
+	setContentView(R.layout.main); 
+	// parameters initialisation for image buttons  
+	rd1 = (ImageButton)findViewById(R.id.imageButton1);
+	rd2 = (ImageButton)findViewById(R.id.imageButton2);	
+	rd3 = (ImageButton)findViewById(R.id.imageButton3);
+	rd4 = (ImageButton)findViewById(R.id.imageButton4); 
+	tv1 = (TextView)findViewById(R.id.textView1);
+	tv2 = (TextView)findViewById(R.id.textView2); 
+	rd1.setOnClickListener(this);
+	rd2.setOnClickListener(this);	
+	rd3.setOnClickListener(this);
+	rd5.setOnClickListener(this); 	
+	}
+
+------------------------------------------------------------------------------------------------------------------------
+
+
+	public void onClick(View v) {
+		// TODO Auto-generated method stub
+		switch (v.getId()) {
+		case R.id.imageButton1:
+
+			Intent myIntent = new Intent(v.getContext(), c.class);
+			startActivityForResult(myIntent, 0);
+			break;
+		case R.id.imageButton2:
+
+			Intent myIntent1 = new Intent(v.getContext(), cp.class);
+			startActivityForResult(myIntent1, 0);
+			break;
+
+		case R.id.imageButton3:
+
+			Intent myIntent3 = new Intent(v.getContext(), py.class);
+			startActivityForResult(myIntent3, 0);
+
+			break;
+		case R.id.imageButton4:
+
+			Intent myIntent4 = new Intent(v.getContext(), sci.class);
+			startActivityForResult(myIntent4, 0);
+
+			break;
+
+		default:
+			break;
+		}
+	}
+
+----------------------------------------------------------------------------------------------------------------------
+
+
+// implemented application exit for the user
+	public void onBackPressed() {
+
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		builder.setMessage("Are you sure you want to exit?")
+				.setCancelable(false)
+				.setPositiveButton("Yes",
+						new DialogInterface.OnClickListener() {
+							public void onClick(DialogInterface dialog, int id) {
+								finish();
+								android.os.Process.killProcess(android.os.Process.myPid());
+							}
+						})
+				.setNegativeButton("No", new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int id) {
+						dialog.cancel();
+					}
+				});
+		AlertDialog alert = builder.create();
+		alert.show();
+	}
+
+-------------------------------------------------------------------------------------------------------------------------
+
+                // web view for c class
+		WebView engine = (WebView) findViewById(R.id.webView1);
+		WebSettings webSettings = engine.getSettings();
+		// java script enabled
+		webSettings.setJavaScriptEnabled(true);
+		// js interface for reload
+		engine.addJavascriptInterface(new JsInterface(), "android");
+		// cache problem removed
+		webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE);
+		webSettings.setAppCacheEnabled(false);
+		// scroll bars disabled
+		engine.setVerticalScrollBarEnabled(false);
+		engine.setHorizontalScrollBarEnabled(false);
+		// focused the web page
+		engine.setOnTouchListener(new View.OnTouchListener() {
+			public boolean onTouch(View v, MotionEvent event) {
+				switch (event.getAction()) {
+				case MotionEvent.ACTION_DOWN:
+				case MotionEvent.ACTION_UP:
+					if (!v.hasFocus()) {
+						v.requestFocus();
+					}
+					break;
+				}
+				return false;
+			}
+
+			public boolean onTouch1(View arg0, MotionEvent arg1) {
+				// TODO Auto-generated method stub
+				return false;
+			}
+		});
+
+		engine.loadUrl("http://127.0.0.1/html/c/index.html");
+
+		engine.setWebChromeClient(new WebChromeClient()
+
+		{
+			@Override
+			public void onConsoleMessage(String message, int lineNumber,
+					String sourceID) {
+				Log.d("MyApplication", message + " -- From line " + lineNumber
+						+ " of " + sourceID);
+				super.onConsoleMessage(message, lineNumber, sourceID);
+			}
+
+		});
+
+------------------------------------------------------------------------------------------------------------------------
+
+                // web view for shell in a box
+		WebView engine1 = (WebView) findViewById(R.id.webView2);
+
+		WebSettings webSettings1 = engine1.getSettings();
+		// java script enabled
+		webSettings1.setJavaScriptEnabled(true);
+		// scroll bars disabled
+
+		engine1.setVerticalScrollBarEnabled(false);
+		engine1.setHorizontalScrollBarEnabled(false);
+		// web page focused
+
+		engine1.setOnTouchListener(new View.OnTouchListener() {
+
+			public boolean onTouch(View v, MotionEvent event) {
+				switch (event.getAction()) {
+				case MotionEvent.ACTION_DOWN:
+				case MotionEvent.ACTION_UP:
+					if (!v.hasFocus()) {
+						v.requestFocus();
+					}
+					break;
+				}
+				return false;
+			}
+
+			public boolean onTouch1(View arg0, MotionEvent arg1) {
+				// TODO Auto-generated method stub
+				return false;
+			}
+		});
+
+		// address of page for shell in a box
+
+		engine1.loadUrl("http://127.0.0.1:4200");
+		engine1 = new WebView(this);
+		engine1.reload();
+
+		engine1.setWebChromeClient(new WebChromeClient()
+
+		{
+			@Override
+			public void onConsoleMessage(String message, int lineNumber,
+					String sourceID) {
+				Log.d("MyApplication", message + " -- From line " + lineNumber
+						+ " of " + sourceID);
+				super.onConsoleMessage(message, lineNumber, sourceID);
+			}
+
+		});
+
+	}
+
+-----------------------------------------------------------------------------------------------------------------------
+
+        // menu options by switch case
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		// Handle item selection
+		switch (item.getItemId()) {
+		case R.id.open:
+			ex_flag = "open";
+			write_path = "/data/local/linux/var/www/html/c/code/.open_file.c";
+			oe_path = Environment.getExternalStorageDirectory()
+					+ "/APL/c/code/";
+			mPath = new File(oe_path);
+			loadFileList();
+			return true;
+		case R.id.savecode1:
+			test();
+			return true;
+		case R.id.example:
+			ex_flag = "example";
+			write_path = "/data/example/c/.open_file.c";
+			oe_path = "/data/local/linux/var/www/html/c/example/";
+			mPath = new File(oe_path);
+			loadFileList();
+			return true;
+		case R.id.help:
+			Intent myIntent = new Intent(c.this, chelp.class);
+			startActivityForResult(myIntent, 0);
+
+			return true;
+		case R.id.about:
+
+			Intent myIntent1 = new Intent(c.this, about.class);
+			startActivityForResult(myIntent1, 0);
+			return true;
+
+		default:
+			return super.onOptionsItemSelected(item);
+		}
+	}
+
+
+
+------------------------------------------------------------------------------------------------------------------------
+
+public void test() {
+
+		// TODO Auto-generated method stub
+		WebView engine = (WebView) findViewById(R.id.webView1);
+
+		WebSettings webSettings = engine.getSettings();
+		webSettings.setJavaScriptEnabled(true);
+		engine.getSettings().setJavaScriptEnabled(true);
+		webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE);
+		webSettings.setAppCacheEnabled(false);
+		engine.setWebChromeClient(new MyWebChromeClient());
+
+		engine.loadUrl("javascript:savecode()");
+
+	}
+
+--------------------------------------------------------------------------------------------------------------------------
+
+// function for open
+	public void openFile() {
+
+		// TODO Auto-generated method stub
+		WebView engine = (WebView) findViewById(R.id.webView1);
+		WebSettings webSettings = engine.getSettings();
+		webSettings.setJavaScriptEnabled(true);
+		engine.getSettings().setJavaScriptEnabled(true);
+		webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE);
+		webSettings.setAppCacheEnabled(false);
+		engine.setWebChromeClient(new MyWebChromeClient());
+		if (ex_flag == "open")
+			engine.loadUrl("javascript:submit_file()");
+		else if (ex_flag == "example")
+			engine.loadUrl("javascript:example_file()");
+	}
+
+	// android file explorer
+	private void loadFileList() {
+
+		try {
+			mPath.mkdirs();
+		} catch (SecurityException e) {
+			System.out.println("unable to write on the sd card ");
+		}
+		if (mPath.exists()) {
+
+			FilenameFilter filter = new FilenameFilter() {
+				public boolean accept(File dir, String filename) {
+					File sel = new File(dir, filename);
+
+					return filename.contains(FTYPE) || sel.isDirectory();
+				}
+			};
+			mFileList = mPath.list(filter);
+
+			onCreateDialog(DIALOG_LOAD_FILE);
+
+		} else {
+			mFileList = new String[0];
+		}
+	}
+
+	protected Dialog onCreateDialog(int id) {
+
+		Dialog dialog = null;
+		AlertDialog.Builder builder = new Builder(this);
+
+		switch (id) {
+		case DIALOG_LOAD_FILE:
+
+			builder.setTitle("Choose your file");
+			if (mFileList == null) {
+				System.out
+						.println("Showing file picker before loading the file list ");
+				dialog = builder.create();
+				return dialog;
+			}
+			builder.setItems(mFileList, new DialogInterface.OnClickListener() {
+
+				public void onClick(DialogInterface dialog, int which) {
+					mChosenFile = mFileList[which];
+
+					InputStream inStream = null;
+					OutputStream outStream = null;
+
+					try {
+						File bfile = new File(write_path);
+						inStream = new FileInputStream(oe_path + mChosenFile);
+						outStream = new FileOutputStream(bfile);
+
+						byte[] buffer = new byte[1024];
+
+						int length;
+						// copy the file content in bytes
+						while ((length = inStream.read(buffer)) > 0) {
+
+							outStream.write(buffer, 0, length);
+
+						}
+
+						inStream.close();
+						outStream.close();
+						openFile();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+			});
+			break;
+		}
+		dialog = builder.show();
+		return dialog;
+	}
+
+-------------------------------------------------------------------------------------------------------------------------
+
+// js interface to establish communication between the android and
+	// javascript for reloading the webpage for shell in a box
+	private class JsInterface {
+		public void reloadConsole() {
+			/* below put id of second webview which has shell in a box */
+			WebView engine1 = (WebView) findViewById(R.id.webView2);
+			WebSettings webSettings1 = engine1.getSettings();
+			webSettings1.setJavaScriptEnabled(true);
+			engine1.reload();
+		}
+	}
+
+-------------------------------------------------------------------------------------------------------------------------
+
+
+public void test1() {
+		// TODO Auto-generated method stub
+		WebView engine = (WebView) findViewById(R.id.webView1);
+		WebSettings webSettings = engine.getSettings();
+		webSettings.setJavaScriptEnabled(true);
+		engine.getSettings().setJavaScriptEnabled(true);
+		webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE);
+		webSettings.setAppCacheEnabled(false);
+		engine.setWebChromeClient(new MyWebChromeClientsci());
+		engine.loadUrl("javascript:saveImg()");
+	}
+
+------------------------------------------------------------------------------------------------------------------------
+
+public class ImagePlotActivity extends Activity implements SimpleGestureListener {
+		private SimpleGestureFilter detector;
+		public void onCreate(Bundle savedInstanceState) {
+			super.onCreate(savedInstanceState);
+			setContentView(R.layout.main2);
+			detector = new SimpleGestureFilter(this, this);
+			Button btnOpenNewActivity = (Button) findViewById(R.id.button1);
+			btnOpenNewActivity.setOnClickListener(new View.OnClickListener() {
+				public void onClick(View v) {
+					Intent myIntent = new Intent();
+					sci.clearFlag();
+					finish();
+				}
+			});
+			ImageView img = (ImageView) findViewById(R.id.imageView1);
+			/* give path of actual image file generated by cgi script below */
+			Bitmap bmp = BitmapFactory.decodeFile("/data/local/linux/var/www/html/scilab/tmp/1.gif");
+			img.setImageBitmap(bmp);
+		}
+
+		public boolean dispatchTouchEvent(MotionEvent me) {
+			this.detector.onTouchEvent(me);
+			return super.dispatchTouchEvent(me);
+		}
+
+		public void onSwipe(int direction) {
+			switch (direction) {
+			case SimpleGestureFilter.SWIPE_RIGHT:
+				finish();
+				break;
+
+			}
+
+		}
+
+		public void onDoubleTap() {
+		}
+	}
+
+
+-----------------------------------------------------------------------------------------------------------------------
+
+public class SimpleGestureFilter extends SimpleOnGestureListener{
+		 public final static int SWIPE_RIGHT = 4;		 
+		 public final static int MODE_TRANSPARENT = 0;
+		 public final static int MODE_SOLID       = 1;
+		 public final static int MODE_DYNAMIC     = 2;		 
+		 private final static int ACTION_FAKE = -13; 
+		 private int swipe_Min_Distance = 100;
+		 private int swipe_Max_Distance = 350;
+		 private int swipe_Min_Velocity = 100;		 
+		 private int mode      = MODE_DYNAMIC;
+		 private boolean running = true;
+		 private boolean tapIndicator = false;		 
+		 private Activity context;
+		 private GestureDetector detector;
+		 private SimpleGestureListener listener;
+public SimpleGestureFilter(Activity context,SimpleGestureListener sgl) { 
+		  this.context = context;
+		  this.detector = new GestureDetector(context, this);
+		  this.listener = sgl; 
+		 }		 
+		 public void onTouchEvent(MotionEvent event){		  
+		   if(!this.running)
+		  return;  		  
+		   boolean result = this.detector.onTouchEvent(event);   
+		   if(this.mode == MODE_SOLID)
+		    event.setAction(MotionEvent.ACTION_CANCEL);
+		   else if (this.mode == MODE_DYNAMIC) {		  
+		     if(event.getAction() == ACTION_FAKE) 
+		       event.setAction(MotionEvent.ACTION_UP);
+		     else if (result)
+		       event.setAction(MotionEvent.ACTION_CANCEL); 
+		     else if(this.tapIndicator){
+		      event.setAction(MotionEvent.ACTION_DOWN);
+		      this.tapIndicator = false;
+		     } 
+		   }
+		   //else just do nothing, it's Transparent
+		 }
+		 
+
+--------------------------------------------------------------------------------------------------------------------
+
+// button for close
+		Button btnOpenNewActivity = (Button) findViewById(R.id.button1);
+		btnOpenNewActivity.setOnClickListener(new View.OnClickListener() {
+			// close this class and bring to same state
+			public void onClick(View v) {
+
+				finish();
+			}
+		});
+
+		// webview for chelp
+		WebView engine = (WebView) findViewById(R.id.webView1);
+
+		WebSettings webSettings = engine.getSettings();
+		// java script enabled
+		webSettings.setJavaScriptEnabled(true);
+		// cache problem removed
+		webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE);
+		webSettings.setAppCacheEnabled(false);
+		// scroll bars disabled in webview
+		engine.setVerticalScrollBarEnabled(false);
+		engine.setHorizontalScrollBarEnabled(false);
+		// focus on web page
+		engine.setOnTouchListener(new View.OnTouchListener() {
+
+			public boolean onTouch(View v, MotionEvent event) {
+				switch (event.getAction()) {
+				case MotionEvent.ACTION_DOWN:
+				case MotionEvent.ACTION_UP:
+					if (!v.hasFocus()) {
+						v.requestFocus();
+					}
+					break;
+				}
+				return false;
+			}
+
+			public boolean onTouch1(View arg0, MotionEvent arg1) {
+				// TODO Auto-generated method stub
+				return false;
+			}
+		});
+
+		// address of html file in ch root
+		engine.loadUrl("file:///data/local/linux/var/www/html/c/chelp.html");
+		// enabling all pop ups in web view
+		engine.setWebChromeClient(new WebChromeClient()
+
+		{
+			@Override
+			public void onConsoleMessage(String message, int lineNumber,
+					String sourceID) {
+				Log.d("MyApplication", message + " -- From line " + lineNumber
+						+ " of " + sourceID);
+				super.onConsoleMessage(message, lineNumber, sourceID);
+			}
+
+		});
+	}
+
+----------------------------------------------------------------------------------------------------------------------------
+
+ //button for close
+	        Button btnOpenNewActivity = (Button) findViewById(R.id.button1);
+	        btnOpenNewActivity .setOnClickListener(new View.OnClickListener() {
+	        	// close this class and bring to same state
+		        public void onClick(View v) {
+		        			        	
+		            finish();
+		        }
+	        }); 
+	        
+	   // webview for chelp     
+	  WebView engine = (WebView) findViewById(R.id.webView1); 
+      
+      WebSettings webSettings = engine.getSettings();
+      //java script enabled
+      webSettings.setJavaScriptEnabled(true);
+     // cache problem removed
+      webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE);
+	     webSettings.setAppCacheEnabled(false);
+	     //scroll bars disabled in webview
+	   engine.setVerticalScrollBarEnabled(false);
+	  	 engine.setHorizontalScrollBarEnabled(false);
+	     // focus on web page
+	   engine.setOnTouchListener(new View.OnTouchListener() { 
+	        
+      	public boolean onTouch(View v, MotionEvent event) {
+      	           switch (event.getAction()) { 
+      	               case MotionEvent.ACTION_DOWN: 
+      	               case MotionEvent.ACTION_UP: 
+      	                   if (!v.hasFocus()) { 
+      	                       v.requestFocus(); 
+      	                   } 
+      	                   break; 
+      	           } 
+      	           return false; 
+      	        }
+
+			public boolean onTouch1(View arg0, MotionEvent arg1) {
+				// TODO Auto-generated method stub
+				return false;
+			}
+      	});
+	       
+     // address of html file in ch root
+      engine.loadUrl("file:///data/local/linux/var/www/html/about.html"); 
+      // enabling all pop ups in web view
+      engine.setWebChromeClient(new WebChromeClient()
+
+      {
+          @Override
+          public void onConsoleMessage(String message, int lineNumber,String sourceID) {
+              Log.d("MyApplication", message + " -- From line "+ lineNumber + " of " + sourceID);
+              super.onConsoleMessage(message, lineNumber, sourceID);
+          }
+
+      });
+		        }    
+	
+-------------------------------------------------------------------------------------------------------------------------
+
+    <uses-sdk android:minSdkVersion="8" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
+-------------------------------------------------------------------------------------------------------------------------
+
+<application
+        android:icon="@drawable/apl"
+        android:label="@string/app_name9" 
+        android:background="@null"
+        >
+
+------------------------------------------------------------------------------------------------------------------------
+
+
+       <activity
+            android:name=".APLActivity"
+            android:configChanges="keyboardHidden|orientation"
+            android:label="@string/app_name" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name="com.aakash.lab.sci"
+            android:label="@string/app_name1" >
+        </activity>
+        <activity
+            android:name="com.aakash.lab.c"
+            android:label="@string/app_name2" >
+        </activity>
+        <activity
+            android:name="com.aakash.lab.cp"
+            android:label="@string/app_name3" >
+        </activity>
+        <activity
+            android:name="com.aakash.lab.py"
+            android:label="@string/app_name4" >
+        </activity>        
+        <activity
+            android:name=".OnlyExt"
+            android:label="@string/app_name4" >
+        </activity>
+        <activity
+            android:name="com.aakash.lab.ImagePlotActivity"
+            android:label="@string/app_name6" >
+        </activity>
+        <activity
+            android:name=".chelp"
+            android:label="@string/app_name7" >
+        </activity>
+        <activity
+            android:name=".cphelp"
+            android:label="@string/app_name7" >
+        </activity>
+        <activity
+            android:name=".pyhelp"
+            android:label="@string/app_name7" >
+        </activity>
+        <activity
+            android:name=".scihelp"
+            android:label="@string/app_name7" >
+        </activity>
+        <activity
+            android:name="com.aakash.lab.about"
+            android:label="@string/app_name8" >
+        </activity>
+------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

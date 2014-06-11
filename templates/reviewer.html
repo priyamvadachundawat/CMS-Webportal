@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<body>
+<h1><u>Welcome to the Review page</u></h1>
+
+
+{% for i in uploads %}
+
+		{{i.name}}
+		<h2>{{i.topic}}</h2><a href="/media/{{i.pdf_doc}}">FILE</a>
+		<h3>{{i.summary}}</h3>
+		
+		
+{% endfor %}
+
+
+<a href="/logout">
+<button id='Logout-button' type='submit' ><span>Log out</span></button></a><br><br>
+
+
+<a href="/user/password/change">
+<button id='Password-reset-button' type='submit' ><span>Change Password</span></button></a>
+
+</body>
+</html>
