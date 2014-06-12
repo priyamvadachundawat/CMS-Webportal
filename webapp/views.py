@@ -12,7 +12,7 @@ from django.contrib.auth.models import User
 
 from webapp.models import Contributor, Reviewer, Subject
 
-from webapp.forms import ContributorForm , UserForm, ContributorUploadForm
+from webapp.forms import ContributorForm, UserForm, ContributorUploadForm
 
 
 def index(request):
@@ -93,8 +93,11 @@ def home(request):
 	return render_to_response('panda/home.html',context)
 
 def contributor_signup(request):
+    """request: request for new contributor to signup
+       This function adds a new contributor. This is a signup function that helps contributor to enterhis details for first time.
+       It directs the contributor to upload page.
+       Example: contributor_signup(request)"""
 
-	"""Request for new contributor to signup"""
 	context = RequestContext(request)
 	registered = False
 	if request.method == 'POST':
